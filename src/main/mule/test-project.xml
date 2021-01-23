@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="80f9a139-6f91-40c4-a87d-d97244975e10" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+
+<configuration doc:name="Configuration" defaultErrorHandler-ref="globalErrorHandler" />
+	<error-handler name="globalErrorHandler" >
+<on-error-continue enableNotifications="true" logException="true" doc:name="0n Error Continue" >
+<set-payload value="Global Error Handler" doc:name='"Global Error Handler"' />
+</on-error-continue>
+</error-handler>	
+
+	<file:config name="File_Config" doc:name="File Config" doc:id="329eea0b-acc1-4d36-a2ee-c2dada66b183" />
+	<flow name="myFlow" doc:id="42b2b5f9-e6cd-4e5b-9b97-cf26916b9826" >
+
+    <http:listener doc:name="Listener" doc:id="739107cc-b889-4057-8954-22f34909bead" config-ref="HTTP_Listener_config" path="api/foreach"/>
+		<set-payload value="#[[1,2,3,4]]" doc:name="Set Payload [1,2,3,4]" />
+
+    <set-variable value="0" doc:name="count = 0" variableName="count"/>
+
+    <foreach doc:name="For Each">
+
+        <set-variable value="#[vars.count + payload]" doc:name="count = count + payload" variableName="count"/>
+
+     </foreach>
+
+     <logger level="INFO" doc:name="Log count" message="#[vars.count]"/>
+
+</flow>
+	<flow name="test-projectFlow2" doc:id="04684163-bbc4-4916-9096-ac1520e4894e" >
+		<http:listener doc:name="Listener" doc:id="59e52ff0-eab9-49ad-b7d3-80d848ca33af" config-ref="HTTP_Listener_config" path="api/sg"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="2dab62b0-39d8-48c6-9f56-068643fe9102" >
+			<route >
+				<set-payload value="C" doc:name="Set Payload" doc:id="ce872385-0fcd-4065-9769-0bd84e35a147" />
+			</route>
+			<route >
+				<set-payload value="B" doc:name="Set Payload" doc:id="6cb16317-aed4-4236-8402-db54d1aee6aa" />
+			</route>
+			<route >
+				<set-payload value="A" doc:name="Set Payload" doc:id="03a64423-244e-4343-934c-8b367f03fc48" />
+			</route>
+		</scatter-gather>
+		<logger level="INFO" doc:name="Logger" doc:id="abc6b232-c2f1-45e2-b1ef-0132b885b84e" message="#[payload]"/>
+	</flow>
+	<flow name="test-projectFlow1" doc:id="4234ab18-42d2-40e3-921e-86c7061220e2" >
+		<http:listener doc:name="Listener" doc:id="8cba2264-f0b0-4b5d-a5ec-52adf24d0e10" config-ref="HTTP_Listener_config" path="api/file"/>
+		<file:list doc:name="List" doc:id="20187467-5464-490a-a957-0a695f9dd767" config-ref="File_Config" directoryPath="/Users/lukas/Downloads/APDevFundamentals4.3_studentFiles_SP_30oct2020/resources/examples"/>
+		<logger level="INFO" doc:name="Logger" doc:id="d4382585-db7f-4472-9518-130ff30b0b1c" />
+	</flow>
+	<flow name="test-projectFlow" doc:id="03885477-a6ef-4145-ab5b-6d50e7c07788" >
+		<http:listener doc:name="Listener" doc:id="a0f619c6-cc3f-482c-a1e9-729329387bcc" config-ref="HTTP_Listener_config" path="api/batch1"/>
+		<set-variable value="5" doc:name="Set Variable" doc:id="8bcb84e2-a90a-4bc1-ac49-a95d35209b4b" variableName="counter"/>
+		<set-payload value="#[[1,2,3]]" doc:name="Set Payload" doc:id="c663bb17-f3bf-4b40-8a46-0d2f2bbcaecd" />
+		<batch:job jobName="test-projectBatch_Job" doc:id="fe372643-83a2-4323-b2af-de11768efd99" >
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="689ba09e-5153-4eca-96d9-0b26e27fa297" >
+					<set-variable value="#[vars.counter + 10]" doc:name="Set Variable" doc:id="a203c408-b967-4f20-8d92-e4da2b88c500" variableName="counter"/>
+					<set-variable value="#[vars.stepVar]" doc:name="Set Variable" doc:id="de69832b-e5e7-47a7-8b0c-6cea5d07f80d" variableName="counter"/>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="658a7dbb-4ed0-414f-a825-de872823fa39" message='#[vars.counter]'/>
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+
+<flow name="errMain" >
+
+<http:listener doc:name="Listener" doc:id="6ddb6234-5a58-4dce-bc0a-1194505b0a22" config-ref="HTTP_Listener_config" path="api/batch2"/>
+		<set-payload value="#[[1,2,3,4]]" doc:name="[1,2,3,4]" />
+<batch:job jobName="processRecordsBatchJob" >
+<batch:process-records>
+<batch:step name="Batch_Step_With_Filter" acceptExpression="#[(payload mod 2) != 0]">
+<ee:transform doc:name="Divide by 3" >
+<ee:message ><ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload / 3]]></ee:set-payload>
+</ee:message>
+</ee:transform>
+<batch:aggregator doc:name="Batch_Aggregate_1" size="2">
+<logger level="INFO" doc:name="payload" message="#[payload] "/>
+</batch:aggregator>
+</batch:step>
+</batch:process-records>
+</batch:job>
+</flow>
+
+
+<flow name="ErrorMain2">
+
+<http:listener doc:name="Listener" doc:id="bdeebdd1-b8bc-4433-a14d-cab3dc7a9d5d" config-ref="HTTP_Listener_config" path="api/err1"/>
+		<set-payload value='MAIN' doc:name='"MAIN"' />
+		<ee:transform doc:name="Response ++ payload" doc:id="14284e07-d659-4a55-a327-47cf64e54764">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+"RESPONSE" ++ payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="0eccf628-c489-437a-829e-1b1affedee71" type="HTTP:NOT_FOUND">
+				<set-payload value="HTTP:NOT_FOUND" doc:name="Set Payload" doc:id="b14f50eb-92e2-40b4-b370-7e992db95489" />
+			</on-error-continue>
+</error-handler>
+</flow>
+
+<flow name="errPrFl">
+<http:listener doc:name="Listener" doc:id="420b6397-bc5d-4da2-ab74-cba16adc1322" config-ref="HTTP_Listener_config" path="api/err2"/>
+		<flow-ref doc:name="private" name="private"/>
+<set-payload value='Success - main flow' doc:name='"Success - main flow"' />
+		<error-handler>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="9d3f737c-547c-40c2-b02e-6049778853ff" >
+				<set-payload value="Error Main Flow" doc:name="Set Payload" doc:id="e0a323f3-955f-4c55-af4e-9700397a6a9a" />
+			</on-error-continue>
+</error-handler>
+</flow>
+<flow name="private" >
+<set-payload value="Success - main flow" doc:name='"Success - private flow"' />
+		<validation:is-number numberType="INTEGER" doc:name= "payload" value= "#[payload]" message="Validate - Payload is an Integer" />
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="90aaebb4-cdb5-4ee0-8247-541a0fd4d787" >
+				<set-payload value="Error - Private flow" doc:name="Set Payload" doc:id="4f7a562e-edae-4192-97f6-31616529d749" />
+			</on-error-propagate>
+</error-handler>
+</flow>
+	<flow name="err3" doc:id="ca95fac6-e27d-493b-9547-3281ebaaa6f7" >
+		<http:listener doc:name="Listener" doc:id="912a0b01-cb58-4488-80f0-dcdf7b14c9ed" config-ref="HTTP_Listener_config" path="api/err3"/>
+		<set-payload value="Success - bein  main flow" doc:name='"Success - bein main flow"' doc:id="4c0255b6-8fd2-44e9-8f09-590840d95cfd" />
+		<validation:is-number numberType="INTEGER" doc:name="payload" doc:id="dc49ac3d-1c81-4f94-8646-6f1ce2a61520" value="#[payload]" message="Validate - Payload is an Integer" />
+		<set-payload value="Success - end main flow" doc:name='"Success - end main flow"' doc:id="7270fab5-a46d-4c51-b444-55307bdd8ec2" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="32e26f61-cb53-4bf1-93e0-224438f20ea7" >
+				<set-payload value="Error main flow" doc:name="Set Payload" doc:id="b458d052-893d-47f1-97e3-72fe86dc4d13" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="test-projectFlow3" doc:id="39902d9a-a974-4379-9ada-285ecdbf5570" >
+		<ee:transform doc:name="Transform Message" doc:id="57631de3-1e1b-4f27-a963-5a48d40f9120" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json writeAttributes=true
+---
+{(aaa: payload)}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+
+
+</mule>
